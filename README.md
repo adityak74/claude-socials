@@ -22,27 +22,34 @@ More platforms coming soon (Reddit, LinkedIn, Twitter/X, Lobsters, ...).
 
 ## Install
 
-### Inside Claude Code (recommended)
+### Step 1 — Add the marketplace
 
+Inside Claude Code:
 ```
 /plugin marketplace add adityak74/claude-socials
+```
+
+Or from the terminal:
+```bash
+claude plugin marketplace add adityak74/claude-socials
+```
+
+### Step 2 — Install a plugin
+
+Inside Claude Code:
+```
 /plugin install hn-submit@claude-socials
 ```
 
-### From the terminal
-
+Or from the terminal:
 ```bash
-# Add the marketplace
-claude plugin marketplace add adityak74/claude-socials
-
-# Install a plugin
 claude plugin install hn-submit@claude-socials
 
-# Or install at project scope (shared via .claude/settings.json)
+# Project scope — shared with your team via .claude/settings.json
 claude plugin install hn-submit@claude-socials --scope project
 ```
 
-### One-liner (marketplace + plugin)
+### One-liner (marketplace + plugin together)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- hn-submit
