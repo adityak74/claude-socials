@@ -1,0 +1,30 @@
+{
+  "name": "claude-socials",
+  "owner": {
+    "name": "Aditya Karnam",
+    "email": "adityakarnam.grao@gmail.com"
+  },
+  "metadata": {
+    "description": "Claude Code plugins for posting content to social media platforms",
+    "version": "1.0.0",
+    "pluginRoot": "./plugins"
+  },
+  "plugins": [
+    {
+      "name": "hn-submit",
+      "source": "./plugins/hn-submit",
+      "description": "Submit a URL to Hacker News via Playwright MCP browser automation",
+      "version": "1.0.0",
+      "author": {
+        "name": "Aditya Karnam",
+        "email": "adityakarnam.grao@gmail.com"
+      },
+      "homepage": "https://github.com/adityak74/claude-socials/tree/main/plugins/hn-submit",
+      "repository": "https://github.com/adityak74/claude-socials",
+      "license": "MIT",
+      "keywords": ["hackernews", "hn", "social-media", "submit", "playwright"],
+      "category": "social-media",
+      "tags": ["hackernews", "hn", "posting", "automation"]
+    }
+  ]
+}

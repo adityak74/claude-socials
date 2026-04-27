@@ -4,73 +4,67 @@
 
 # claude-socials
 
-A collection of [Claude Code](https://claude.ai/code) skills for posting content to social media platforms — directly from your terminal or AI-assisted workflows.
+A collection of [Claude Code](https://claude.ai/code) plugins for posting content to social media platforms — directly from your terminal or AI-assisted workflows.
 
-Each skill automates the browser-based flow for a platform using [Playwright MCP](https://github.com/microsoft/playwright-mcp), so Claude can navigate, log in, and submit on your behalf.
+Each plugin automates the browser-based flow for a platform using [Playwright MCP](https://github.com/microsoft/playwright-mcp), so Claude can navigate, log in, and submit on your behalf.
 
 ---
 
-## Available Skills
+## Available Plugins
 
-| Skill | Platform | Status |
+| Plugin | Platform | Status |
 |---|---|---|
-| [`hn-submit`](./skills/hn-submit/) | Hacker News | ✅ Available |
+| [`hn-submit`](./plugins/hn-submit/) | Hacker News | ✅ Available |
 
 More platforms coming soon (Reddit, LinkedIn, Twitter/X, Lobsters, ...).
 
 ---
 
-## Easy Install
+## Install
 
 ### Inside Claude Code (recommended)
 
-Paste this into any Claude Code chat:
-
 ```
-Install the hn-submit skill from https://github.com/adityak74/claude-socials — fetch the SKILL.md from the raw URL in marketplace.json and copy it to .claude/skills/hn-submit/SKILL.md
+/plugin marketplace add adityak74/claude-socials
+/plugin install hn-submit@claude-socials
 ```
 
-Claude will read `marketplace.json`, fetch the skill file, and drop it in the right place.
-
-### From the terminal (one-liner)
+### From the terminal
 
 ```bash
-# Install into the current project
+# Add the marketplace
+claude plugin marketplace add adityak74/claude-socials
+
+# Install a plugin
+claude plugin install hn-submit@claude-socials
+
+# Or install at project scope (shared via .claude/settings.json)
+claude plugin install hn-submit@claude-socials --scope project
+```
+
+### One-liner (marketplace + plugin)
+
+```bash
 curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- hn-submit
-
-# Install globally (available in all projects)
-curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- hn-submit --global
 ```
 
-### Manual
-
-```bash
-git clone https://github.com/adityak74/claude-socials.git /tmp/claude-socials
-
-# Project-level
-cp -r /tmp/claude-socials/skills/hn-submit .claude/skills/
-
-# Or globally
-cp -r /tmp/claude-socials/skills/hn-submit ~/.claude/skills/
-```
-
-> After installing, restart Claude Code (or reload the window) so it picks up the new skill.
+> After installing, restart Claude Code to activate the plugin.
 
 ---
 
 ## Prerequisites
 
-All skills that interact with a browser require **Playwright MCP**.
+All plugins that interact with a browser require **Playwright MCP**.
 
-### Install Playwright
+### 1. Install Playwright browsers
 
 ```bash
 npx playwright install
 ```
 
-### Configure Playwright MCP in Claude Code
+### 2. Configure Playwright MCP in Claude Code
 
-Add the server to your Claude Code MCP config. You can do this globally (`~/.claude/claude_desktop_config.json`) or per-project (`.mcp.json` in your project root):
+Add to your MCP config globally (`~/.claude/claude_desktop_config.json`) or per-project (`.mcp.json`):
 
 ```json
 {
@@ -83,15 +77,21 @@ Add the server to your Claude Code MCP config. You can do this globally (`~/.cla
 }
 ```
 
-See the [Playwright MCP repo](https://github.com/microsoft/playwright-mcp) for full setup options including headed/headless mode, browser choice, and authentication persistence.
+See the [Playwright MCP repo](https://github.com/microsoft/playwright-mcp) for full options (headed/headless mode, browser choice, auth persistence).
 
 ---
 
 ## Usage
 
-Once a skill is installed, trigger it by describing what you want in plain English. Each skill's trigger phrases are listed in its `SKILL.md`.
+Once a plugin is installed, trigger it with natural language or the skill command.
 
 ### Hacker News
+
+```
+/hn-submit
+```
+
+Or just describe what you want:
 
 ```
 Post this to HN
@@ -99,41 +99,41 @@ Submit to Hacker News — title: "My Article", URL: https://example.com/my-artic
 Share on HN
 ```
 
-Claude will handle login (using credentials from env vars) and submission automatically.
+Claude handles login (via env vars) and submission automatically.
 
 ---
 
 ## Credentials
 
-Skills use environment variables for credentials — never hardcoded values.
+Plugins use environment variables for credentials — never hardcoded values.
 
-Set them in a `.env` file in your project root (make sure it's in `.gitignore`):
+Set them in a `.env` file in your project root (keep it in `.gitignore`):
 
 ```
 HN_USERNAME=your_username
 HN_PASSWORD=your_password
 ```
 
-Or export them in your shell session:
+Or export in your shell:
 
 ```bash
 export HN_USERNAME=your_username
 export HN_PASSWORD=your_password
 ```
 
-Each skill's README documents the specific env vars it needs.
+Each plugin's `SKILL.md` documents which env vars it requires.
 
 ---
 
-## Skill Reference
+## Plugin Reference
 
-### [`hn-submit`](./skills/hn-submit/)
+### [`hn-submit`](./plugins/hn-submit/)
 
 Submits a URL to [Hacker News](https://news.ycombinator.com/submit).
 
 **Requires:** `HN_USERNAME`, `HN_PASSWORD`
 
-**Trigger phrases:** "post to HN", "submit to Hacker News", "share on HN", "post this article to HN"
+**Trigger:** `/hn-submit` or phrases like "post to HN", "submit to Hacker News", "share on HN"
 
 **What it does:**
 1. Logs in to your HN account via Playwright
@@ -145,17 +145,20 @@ Submits a URL to [Hacker News](https://news.ycombinator.com/submit).
 
 ## Contributing
 
-Contributions are welcome. To add a skill for a new platform:
+Contributions are welcome. To add a plugin for a new platform:
 
-1. Create a directory under `skills/<platform-name>/`
-2. Add a `SKILL.md` following the format of existing skills (frontmatter with `name` and `description`, then workflow steps)
-3. Document required env vars, trigger phrases, and error handling
-4. Open a PR
+1. Create `plugins/<platform-name>/`
+2. Add `.claude-plugin/plugin.json` with `name`, `description`, and `version`
+3. Add `skills/<platform-name>/SKILL.md` with a `description` frontmatter field and the full workflow
+4. Add an entry to `.claude-plugin/marketplace.json`
+5. Document required env vars, trigger phrases, and error handling in the skill
+6. Open a PR
 
-Skills should:
+Plugin conventions:
 - Use environment variables for all credentials
-- Handle common error cases gracefully (rate limits, login failures, duplicate submissions)
-- Use Playwright MCP for any browser automation
+- Handle rate limits, login failures, and duplicate submissions gracefully
+- Use Playwright MCP for browser automation
+- Bump `version` in `plugin.json` and the marketplace entry on every release
 
 ---
 

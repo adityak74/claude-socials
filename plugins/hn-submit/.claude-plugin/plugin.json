@@ -1,0 +1,5 @@
+{
+  "name": "hn-submit",
+  "description": "Submit a URL to Hacker News via Playwright MCP browser automation",
+  "version": "1.0.0"
+}

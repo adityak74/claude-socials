@@ -1,75 +1,52 @@
 #!/usr/bin/env sh
-# install.sh — install a claude-socials skill into .claude/skills/
+# install.sh — add the claude-socials marketplace and install a plugin
 #
 # Usage:
-#   install.sh <skill-id>            # install into ./.claude/skills/
-#   install.sh <skill-id> --global   # install into ~/.claude/skills/
+#   install.sh                        # add the marketplace only
+#   install.sh <plugin-id>            # add marketplace + install plugin
+#   install.sh <plugin-id> --scope project   # install at project scope
 
 set -e
 
-REPO="https://github.com/adityak74/claude-socials"
-RAW="https://raw.githubusercontent.com/adityak74/claude-socials/main"
-TMP_DIR=$(mktemp -d)
+MARKETPLACE="adityak74/claude-socials"
+PLUGIN_ID="$1"
+SCOPE=""
 
-cleanup() { rm -rf "$TMP_DIR"; }
-trap cleanup EXIT
-
-SKILL_ID="$1"
-GLOBAL=0
-
-if [ -z "$SKILL_ID" ]; then
-  echo "Usage: install.sh <skill-id> [--global]"
-  echo ""
-  echo "Available skills:"
-  echo "  hn-submit   — Submit to Hacker News"
-  exit 1
-fi
-
-shift
+shift 2>/dev/null || true
 for arg in "$@"; do
   case "$arg" in
-    --global) GLOBAL=1 ;;
+    --scope) SCOPE="$2"; shift ;;
+    --scope=*) SCOPE="${arg#--scope=}" ;;
   esac
 done
 
-if [ "$GLOBAL" = "1" ]; then
-  DEST="$HOME/.claude/skills/$SKILL_ID"
-else
-  DEST=".claude/skills/$SKILL_ID"
-fi
-
-echo "Installing skill: $SKILL_ID"
-echo "Destination: $DEST"
-echo ""
-
-# Fetch the SKILL.md via curl or wget
-SKILL_URL="$RAW/skills/$SKILL_ID/SKILL.md"
-SKILL_DST="$TMP_DIR/SKILL.md"
-
-if command -v curl >/dev/null 2>&1; then
-  HTTP_STATUS=$(curl -fsSL -o "$SKILL_DST" -w "%{http_code}" "$SKILL_URL")
-elif command -v wget >/dev/null 2>&1; then
-  wget -q -O "$SKILL_DST" "$SKILL_URL"
-  HTTP_STATUS=200
-else
-  echo "Error: curl or wget is required."
+if ! command -v claude >/dev/null 2>&1; then
+  echo "Error: Claude Code CLI ('claude') is not installed or not in PATH."
+  echo "Install Claude Code from https://claude.ai/code"
   exit 1
 fi
 
-if [ ! -s "$SKILL_DST" ]; then
-  echo "Error: skill '$SKILL_ID' not found in the marketplace."
-  echo "Check available skills at $REPO"
-  exit 1
+echo "Adding claude-socials marketplace..."
+claude plugin marketplace add "$MARKETPLACE"
+echo ""
+
+if [ -n "$PLUGIN_ID" ]; then
+  if [ -n "$SCOPE" ]; then
+    echo "Installing plugin: $PLUGIN_ID (scope: $SCOPE)..."
+    claude plugin install "${PLUGIN_ID}@claude-socials" --scope "$SCOPE"
+  else
+    echo "Installing plugin: $PLUGIN_ID..."
+    claude plugin install "${PLUGIN_ID}@claude-socials"
+  fi
+  echo ""
+  echo "Done. Restart Claude Code to activate the plugin."
+  echo ""
+  echo "Usage inside Claude Code:"
+  echo "  /$PLUGIN_ID"
+else
+  echo "Marketplace added. Install a plugin with:"
+  echo "  claude plugin install <plugin-id>@claude-socials"
+  echo ""
+  echo "Available plugins:"
+  echo "  hn-submit   — Submit to Hacker News"
 fi
-
-mkdir -p "$DEST"
-cp "$SKILL_DST" "$DEST/SKILL.md"
-
-echo "Skill installed successfully."
-echo ""
-echo "Next steps:"
-echo "  1. Restart Claude Code (or reload the window) to pick up the new skill."
-echo "  2. Check the skill's README for required env vars and prerequisites:"
-echo "     $REPO/tree/main/skills/$SKILL_ID"
-echo ""
-echo "To uninstall: rm -rf $DEST"

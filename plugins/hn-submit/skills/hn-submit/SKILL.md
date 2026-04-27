@@ -1,22 +1,21 @@
 ---
-name: hn-submit
 description: Submits a post to Hacker News (news.ycombinator.com) using Playwright MCP. Trigger when the user says anything like "post to HN", "submit to Hacker News", "share on HN", "submit this to hackernews", "post this article to HN", or any similar intent to share a URL or article on Hacker News.
 ---
 
-# HN Submit Skill
+# HN Submit
 
 Automates posting content to Hacker News using the Playwright MCP browser tools.
 
 ## Prerequisites
 
-This skill requires the **Playwright MCP** server to be installed and configured.
+This plugin requires the **Playwright MCP** server to be installed and configured.
 
-Install it with:
+Install browsers:
 ```bash
 npx playwright install
 ```
 
-Then add it to your Claude Code MCP config (`~/.claude/claude_desktop_config.json` or project-level `.mcp.json`):
+Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json` or project-level `.mcp.json`):
 ```json
 {
   "mcpServers": {
@@ -32,7 +31,7 @@ See https://github.com/microsoft/playwright-mcp for full setup instructions.
 
 ## Credentials Setup
 
-Credentials come from environment variables. Before using this skill, ensure these are set:
+Credentials come from environment variables. Before using this plugin, ensure these are set:
 
 - `HN_USERNAME` — Hacker News username
 - `HN_PASSWORD` — Hacker News password
