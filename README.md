@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="./claude-socials-logo.png" alt="claude-socials" width="400" />
+</p>
+
 # claude-socials
 
 A collection of [Claude Code](https://claude.ai/code) skills for posting content to social media platforms — directly from your terminal or AI-assisted workflows.
