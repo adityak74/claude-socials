@@ -25,6 +25,22 @@
       "keywords": ["hackernews", "hn", "social-media", "submit", "playwright"],
       "category": "social-media",
       "tags": ["hackernews", "hn", "posting", "automation"]
+    },
+    {
+      "name": "threads-post",
+      "source": "./plugins/threads-post",
+      "description": "Craft and publish posts to Meta Threads via the Graph API — supports text, image, and multi-post thread chains",
+      "version": "1.0.0",
+      "author": {
+        "name": "Aditya Karnam",
+        "email": "adityakarnam.grao@gmail.com"
+      },
+      "homepage": "https://github.com/adityak74/claude-socials/tree/main/plugins/threads-post",
+      "repository": "https://github.com/adityak74/claude-socials",
+      "license": "MIT",
+      "keywords": ["threads", "meta", "social-media", "graph-api", "posting"],
+      "category": "social-media",
+      "tags": ["threads", "meta", "posting", "api", "thread-chain"]
     }
   ]
 }

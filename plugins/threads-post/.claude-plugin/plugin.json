@@ -1,0 +1,5 @@
+{
+  "name": "threads-post",
+  "description": "Craft and publish posts to Meta Threads via the Graph API — supports text, image, and multi-post thread chains",
+  "version": "1.0.0"
+}
