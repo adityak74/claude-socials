@@ -1,0 +1,64 @@
+{
+  "$schema": "https://raw.githubusercontent.com/adityak74/claude-socials/main/marketplace.schema.json",
+  "name": "claude-socials",
+  "description": "Claude Code skills for posting content to social media platforms",
+  "version": "1.0.0",
+  "repository": "https://github.com/adityak74/claude-socials",
+  "homepage": "https://github.com/adityak74/claude-socials#readme",
+  "skills": [
+    {
+      "id": "hn-submit",
+      "name": "Hacker News Submit",
+      "description": "Submit a URL to Hacker News via Playwright MCP browser automation",
+      "version": "1.0.0",
+      "platform": "hackernews",
+      "path": "skills/hn-submit",
+      "skill_file": "skills/hn-submit/SKILL.md",
+      "raw_url": "https://raw.githubusercontent.com/adityak74/claude-socials/main/skills/hn-submit/SKILL.md",
+      "triggers": [
+        "post to HN",
+        "submit to Hacker News",
+        "share on HN",
+        "post this article to HN",
+        "submit this to hackernews"
+      ],
+      "prerequisites": {
+        "mcp": [
+          {
+            "name": "playwright",
+            "package": "@playwright/mcp",
+            "install": "npx playwright install",
+            "config": {
+              "command": "npx",
+              "args": ["@playwright/mcp@latest"]
+            },
+            "docs": "https://github.com/microsoft/playwright-mcp"
+          }
+        ]
+      },
+      "env": [
+        {
+          "key": "HN_USERNAME",
+          "description": "Your Hacker News username",
+          "required": true,
+          "secret": true
+        },
+        {
+          "key": "HN_PASSWORD",
+          "description": "Your Hacker News password",
+          "required": true,
+          "secret": true
+        }
+      ],
+      "install": {
+        "global": "curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- hn-submit --global",
+        "project": "curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- hn-submit",
+        "manual": {
+          "clone": "git clone https://github.com/adityak74/claude-socials.git /tmp/claude-socials",
+          "global": "cp -r /tmp/claude-socials/skills/hn-submit ~/.claude/skills/",
+          "project": "cp -r /tmp/claude-socials/skills/hn-submit .claude/skills/"
+        }
+      }
+    }
+  ]
+}

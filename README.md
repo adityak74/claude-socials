@@ -20,6 +20,44 @@ More platforms coming soon (Reddit, LinkedIn, Twitter/X, Lobsters, ...).
 
 ---
 
+## Easy Install
+
+### Inside Claude Code (recommended)
+
+Paste this into any Claude Code chat:
+
+```
+Install the hn-submit skill from https://github.com/adityak74/claude-socials — fetch the SKILL.md from the raw URL in marketplace.json and copy it to .claude/skills/hn-submit/SKILL.md
+```
+
+Claude will read `marketplace.json`, fetch the skill file, and drop it in the right place.
+
+### From the terminal (one-liner)
+
+```bash
+# Install into the current project
+curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- hn-submit
+
+# Install globally (available in all projects)
+curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- hn-submit --global
+```
+
+### Manual
+
+```bash
+git clone https://github.com/adityak74/claude-socials.git /tmp/claude-socials
+
+# Project-level
+cp -r /tmp/claude-socials/skills/hn-submit .claude/skills/
+
+# Or globally
+cp -r /tmp/claude-socials/skills/hn-submit ~/.claude/skills/
+```
+
+> After installing, restart Claude Code (or reload the window) so it picks up the new skill.
+
+---
+
 ## Prerequisites
 
 All skills that interact with a browser require **Playwright MCP**.
@@ -46,34 +84,6 @@ Add the server to your Claude Code MCP config. You can do this globally (`~/.cla
 ```
 
 See the [Playwright MCP repo](https://github.com/microsoft/playwright-mcp) for full setup options including headed/headless mode, browser choice, and authentication persistence.
-
----
-
-## Installation
-
-Skills are installed by copying the skill directory into your project's `.claude/skills/` folder (or your global `~/.claude/skills/` folder to make a skill available everywhere).
-
-### Install a single skill
-
-```bash
-# Into a specific project
-cp -r skills/hn-submit /path/to/your/project/.claude/skills/
-
-# Or globally (available in all projects)
-cp -r skills/hn-submit ~/.claude/skills/
-```
-
-### Install all skills
-
-```bash
-# Into a specific project
-cp -r skills/. /path/to/your/project/.claude/skills/
-
-# Or globally
-cp -r skills/. ~/.claude/skills/
-```
-
-> **Tip:** After copying, restart Claude Code (or reload the window) so it picks up the new skills.
 
 ---
 
