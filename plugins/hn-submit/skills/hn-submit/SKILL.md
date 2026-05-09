@@ -37,7 +37,7 @@ Credentials come from environment variables. Before using this plugin, ensure th
 - `HN_PASSWORD` — Hacker News password
 
 **One-time setup:**
-1. Create a `.env` file in the project root (add it to `.gitignore`)
+1. Create a `.socials` file in the project root (add it to `.gitignore`)
 2. Add:
    ```
    HN_USERNAME=your_hn_username
@@ -65,9 +65,9 @@ echo $HN_USERNAME
 echo $HN_PASSWORD
 ```
 
-If blank, check for a `.env` file:
+If blank, check for a `.socials` file:
 ```bash
-grep -E "^HN_(USERNAME|PASSWORD)=" .env 2>/dev/null
+grep -E "^HN_(USERNAME|PASSWORD)=" .socials 2>/dev/null
 ```
 
 If still not found, ask the user to provide them.

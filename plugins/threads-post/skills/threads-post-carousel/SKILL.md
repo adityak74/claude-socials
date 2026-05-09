@@ -18,7 +18,7 @@ Load from environment variables:
 - `THREADS_ACCESS_TOKEN` — long-lived access token
 
 **Setup:**
-1. Create `.env` in the project root (add to `.gitignore`):
+1. Create `.socials` in the project root (add to `.gitignore`):
    ```
    THREADS_USER_ID=123456789
    THREADS_ACCESS_TOKEN=EAAxxxxxxxxxxxxx
@@ -61,9 +61,9 @@ echo $THREADS_USER_ID
 echo $THREADS_ACCESS_TOKEN
 ```
 
-If blank, check `.env`:
+If blank, check `.socials`:
 ```bash
-grep -E "^THREADS_(USER_ID|ACCESS_TOKEN)=" .env 2>/dev/null
+grep -E "^THREADS_(USER_ID|ACCESS_TOKEN)=" .socials 2>/dev/null
 ```
 
 If still missing, stop and ask the user to set them.
