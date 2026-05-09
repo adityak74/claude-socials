@@ -1,5 +1,6 @@
 ---
-description: Publishes a carousel post to Meta Threads — a single post containing up to 10 images or videos. Trigger when the user says "carousel on Threads", "post multiple images to Threads", "Threads carousel", "share a gallery on Threads", or any intent to publish a multi-image or multi-video Threads post. For a single image post use threads-post. For a reply chain use threads-post-thread.
+name: threads-post-carousel
+description: Publishes a carousel post to Meta Threads — a single post containing up to 10 images or videos. Trigger when the user says "carousel on Threads", "post multiple images to Threads", "Threads carousel", "share a gallery on Threads", or any intent to publish a multi-image or multi-video Threads post. Do NOT trigger for a single image post or reply chain threads — those have dedicated skills.
 ---
 
 # Threads Post — Carousel

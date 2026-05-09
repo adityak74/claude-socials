@@ -1,5 +1,6 @@
 ---
-description: Crafts and publishes a threaded reply chain to Meta Threads — a root post followed by a series of connected replies that form a thread. Trigger when the user says "create a thread on Threads", "thread this article", "post a thread", "make a multi-part thread", "thread chain", or any intent to publish a sequence of connected posts on Threads. For a single post use threads-post. For a multi-image carousel use threads-post-carousel.
+name: threads-post-thread
+description: Crafts and publishes a threaded reply chain to Meta Threads — a root post followed by a series of connected replies that form a thread. Trigger when the user says "create a thread on Threads", "thread this article", "post a thread", "make a multi-part thread", "thread chain", or any intent to publish a sequence of connected posts on Threads. Do NOT trigger for a single post or multi-image carousel — those have dedicated skills.
 ---
 
 # Threads Post — Thread Chain

@@ -1,5 +1,6 @@
 ---
-description: Creates and publishes a spoiler post to Meta Threads — content that is hidden until the viewer taps to reveal it. Trigger when the user says "spoiler post on Threads", "hide this behind a spoiler", "tap to reveal post", "Threads spoiler", or any similar intent to post content that requires a tap to show. Supports text spoilers, media spoilers (image/video), and carousel spoilers. For a regular post use threads-post. For a carousel use threads-post-carousel.
+name: threads-post-spoiler
+description: Creates and publishes a spoiler post to Meta Threads — content that is hidden until the viewer taps to reveal it. Trigger when the user says "spoiler post on Threads", "hide this behind a spoiler", "tap to reveal post", "Threads spoiler", or any similar intent to post content that requires a tap to show. Supports text spoilers, media spoilers (image/video), and carousel spoilers. Do NOT trigger for regular posts or carousels — those have dedicated skills.
 ---
 
 # Threads Post — Spoiler

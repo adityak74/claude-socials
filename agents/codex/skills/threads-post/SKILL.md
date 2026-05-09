@@ -1,5 +1,6 @@
 ---
-description: Crafts and publishes a single text or image post to Meta Threads using the Graph API. Trigger when the user says "post to Threads", "share on Threads", "publish this to Threads", "put this on Threads", or any similar intent to post a single piece of content to Threads. For carousel (multi-image) posts use threads-post-carousel. For reply chain threads use threads-post-thread.
+name: threads-post
+description: Crafts and publishes a single text or image post to Meta Threads using the Graph API. Trigger when the user says "post to Threads", "share on Threads", "publish this to Threads", "put this on Threads", or any similar intent to post a single piece of content to Threads. Do NOT trigger for carousel (multi-image) posts or reply chain threads — those have dedicated skills.
 ---
 
 # Threads Post — Single Post
