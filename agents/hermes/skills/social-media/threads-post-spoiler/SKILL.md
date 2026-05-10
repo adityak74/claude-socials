@@ -1,137 +1,123 @@
 ---
 name: threads-post-spoiler
-description: Creates and publishes a spoiler post to Meta Threads — content hidden until the viewer taps to reveal it. Supports text spoilers, media spoilers, and combined spoilers.
-version: 1.0.0
-author: Aditya Karnam
-license: MIT
-platforms: [macos, linux, windows]
-
-metadata:
-  hermes:
-    tags: [Social Media, Threads, Meta, Graph API, Spoiler, Hidden Content]
-    related_skills: [threads-post, threads-post-carousel, threads-post-thread]
-    requires_toolsets: [web]
-    requires_tools: [web_search]
-
-required_environment_variables:
-  - name: THREADS_USER_ID
-    prompt: "Enter your numeric Threads user ID"
-    help: "Get it via: curl 'https://graph.threads.net/v1.0/me?access_token=YOUR_TOKEN'"
-    required_for: "Identifying your Threads account in API calls"
-  - name: THREADS_ACCESS_TOKEN
-    prompt: "Enter your long-lived Threads access token"
-    help: "Generate at developers.facebook.com — needs threads_basic and threads_content_publish scopes"
-    required_for: "Authenticating Graph API requests"
+description: Creates and publishes a spoiler-style post to Meta Threads using Playwright browser automation. Trigger when the user says "spoiler post on Threads", "hide this behind a spoiler", "tap to reveal post", "Threads spoiler", or any similar intent to post content that requires a tap to show. Do NOT trigger for regular posts or carousels — those have dedicated skills.
 ---
 
-# Threads Post — Spoiler
+# Threads Post - Spoiler
 
-Creates a spoiler post on Meta Threads — content hidden behind a tap-to-reveal overlay. Three spoiler types:
+Creates a spoiler-style post on Meta Threads through the web UI using Playwright MCP. This avoids Meta Graph API setup, app review, scoped access tokens, numeric user IDs, and container-publish flows.
 
-- **Text spoiler** — hide a range of characters using `text_entities`
-- **Media spoiler** — hide image/video with `is_spoiler_media=true`
-- **Combined** — hide both text and media
+Threads web UI support for native tap-to-reveal spoilers may vary by account and rollout. If the composer exposes a spoiler control, use it. If it does not, ask the user whether to publish a text-safe spoiler format instead, such as a warning line followed by spacing and the spoiler content.
 
-## When to Use
+## Prerequisites
 
-Trigger when the user says "spoiler post on Threads", "hide this behind a spoiler", "tap to reveal post", "Threads spoiler", or similar. Use `threads-post` for regular posts and `threads-post-carousel` for galleries.
+- Playwright MCP is configured and available to the agent.
+- The browser profile used by Playwright is logged in to Threads at `https://www.threads.net/`.
+- Any media to upload exists as a local file path the browser can access.
 
-## Quick Reference
+If the browser is not logged in, open Threads with Playwright and ask the user to complete login in the browser. Do not ask for a Meta access token.
 
-- Text spoiler param: `text_entities=[{"entity_type":"SPOILER","offset":0,"length":N}]`
-- Media spoiler param: `is_spoiler_media=true`
-- Max 10 `text_entities` entries per post
-- Credentials file: `.socials`
+## Optional Setup
 
-## Procedure
+Skills may use these environment variables when present:
 
-### 1. Read credentials
+- `THREADS_HANDLE` - the user's public Threads handle, used only for nicer reporting.
+- `THREADS_PROFILE_DIR` - a persistent browser profile directory if the local Playwright MCP setup supports it.
 
-```bash
-echo $THREADS_USER_ID
-echo $THREADS_ACCESS_TOKEN
+Credentials are browser-session based. Do not create or request `THREADS_USER_ID` or `THREADS_ACCESS_TOKEN`.
+
+## Inputs
+
+Ask the user for:
+
+1. **Post content** - the text and/or media to hide.
+2. **Spoiler intent** - text spoiler, media spoiler, or both.
+3. **Fallback preference** - whether a text-safe spoiler format is acceptable if the web UI has no native spoiler control.
+
+## Crafting the Post
+
+When the user provides content to hide:
+
+- Write a clear teaser or warning line before the spoiler.
+- Keep the total post within the visible Threads composer limit.
+- Use 1-3 hashtags max at the end when useful.
+- Avoid revealing the spoiler in the first visible line.
+
+Show the draft and the intended spoiler behavior to the user for approval before publishing.
+
+## Workflow
+
+### Step 1: Open Threads
+
+Use Playwright MCP to navigate to:
+
+```text
+https://www.threads.net/
 ```
 
-If blank, check `.socials`:
-```bash
-grep -E "^THREADS_(USER_ID|ACCESS_TOKEN)=" .socials 2>/dev/null
-```
+If the login screen appears, stop and ask the user to log in through the browser. After login, continue with the same browser session.
 
-### 2. Gather inputs
+### Step 2: Start a new post
 
-Ask the user:
-1. **Post content** — the text (and/or image/video URL) to hide
-2. **Spoiler type** — text, media, or both?
-3. For text spoilers: which part to hide? (offset + length, or the full text)
+Use Playwright's accessibility snapshot or locator tools to find the composer entry point. Common labels include:
 
-### 3. Craft the post
+- `New thread`
+- `Start a thread`
+- `Post`
+- `Create`
 
-- Write the spoiler text (the hidden part)
-- Optionally write a visible teaser line before the spoiler
-- Keep total text under ~500 characters; 1–3 hashtags max at the end
+Open the composer and paste the approved text.
 
-**Show the draft and spoiler range to the user for approval before publishing.**
+### Step 3: Apply spoiler behavior
 
-### 4. Create container
+Inspect the visible composer controls and menus for spoiler-related options such as:
 
-**Text spoiler** (hide characters 0–49):
-```bash
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads" \
-  -d "media_type=TEXT" \
-  --data-urlencode "text=YOUR_POST_TEXT" \
-  --data-urlencode 'text_entities=[{"entity_type":"SPOILER","offset":0,"length":50}]' \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+- `Spoiler`
+- `Hide`
+- `Mark as spoiler`
+- `Sensitive`
+- `Content warning`
 
-**Image spoiler:**
-```bash
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads" \
-  -d "media_type=IMAGE" \
-  -d "image_url=https://example.com/image.jpg" \
-  --data-urlencode "text=YOUR_CAPTION" \
-  -d "is_spoiler_media=true" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+If a native spoiler control exists, apply it to the approved text/media and verify the UI shows the intended hidden state.
 
-**Combined:**
-```bash
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads" \
-  -d "media_type=IMAGE" \
-  -d "image_url=https://example.com/image.jpg" \
-  --data-urlencode "text=YOUR_POST_TEXT" \
-  --data-urlencode 'text_entities=[{"entity_type":"SPOILER","offset":0,"length":50}]' \
-  -d "is_spoiler_media=true" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+If no native spoiler control exists, stop before publishing and ask whether to use the approved text-safe spoiler fallback.
 
-Parse `id` → `CONTAINER_ID`.
+### Step 4: Attach media if needed
 
-### 5. Wait and publish
+For media spoilers or combined posts, use the upload control and set the approved local file path. Wait for the preview to finish and verify any spoiler/sensitive-media state remains applied.
 
-```bash
-sleep 30
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads_publish" \
-  -d "creation_id=CONTAINER_ID" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+### Step 5: Publish
 
-### 6. Report
+Click the final publish button, commonly labeled `Post`, `Publish`, or `Thread`.
 
-Tell the user: success/failure, live post URL, which content was hidden (text range, media, or both). Never expose the access token.
+Wait until the composer closes and the new post appears, or until Threads shows a confirmation/error state.
 
-## Pitfalls
+### Step 6: Confirm and report
 
-- `text_entities` must be URL-encoded JSON — always use `--data-urlencode`.
-- `offset` is 0-based. `offset + length` must not exceed total text length — out-of-range causes `400`.
-- `is_spoiler_media=true` on a carousel hides ALL attached media, not individual items.
-- Maximum 10 `text_entities` entries per post.
-- The 30-second wait before publishing is required.
-- Long-lived tokens expire after 60 days.
+Tell the user:
 
-## Verification
+- Success or failure.
+- Whether a native spoiler control or fallback text format was used.
+- The live post URL if Playwright can read it from the page or browser address.
+- Any visible Threads error message on failure.
 
-On success, `threads_publish` returns a JSON object with `id`. Open the live URL in a browser or app to confirm the spoiler overlay is visible before tapping.
+Never expose browser cookies, session storage, or other authentication data.
+
+## Error Handling
+
+| Error | Cause | Action |
+|-------|-------|--------|
+| Login required | Browser session is not authenticated | Ask the user to log in through the Playwright browser |
+| Native spoiler control missing | Threads web UI does not expose this feature | Ask before using a text-safe spoiler fallback |
+| Upload fails | File path invalid, unsupported media, or upload issue | Ask for a valid local file path or retry once after the preview clears |
+| Publish button disabled | Empty text, upload still processing, or validation issue | Wait for upload completion and check visible validation text |
+| Rate/limit message | Threads account limit or platform restriction | Report the exact visible message and stop |
+| Captcha/checkpoint | Threads security challenge | Ask the user to complete it manually in the browser |
+
+## Important Notes
+
+- This skill uses the Threads web UI, not `graph.threads.net`.
+- Do not use curl, API containers, Meta app credentials, or long-lived tokens.
+- Native spoiler availability is UI-dependent; do not claim a native spoiler was applied unless Playwright verified it in the composer.
+- Prefer visible UI labels and Playwright accessibility locators over brittle CSS selectors.
+- Keep the browser profile persistent when possible so the user does not need to log in every run.

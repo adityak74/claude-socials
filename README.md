@@ -6,7 +6,7 @@
 
 A collection of skills for posting content to social media platforms — directly from your terminal or AI-assisted workflows. Supports **Claude Code**, **OpenAI Codex**, and **Hermes Agent** (Nous Research).
 
-Browser-based skills use [Playwright MCP](https://github.com/microsoft/playwright-mcp) for automation. API-based skills (like `threads-post`) call platform REST APIs directly — no browser required.
+Browser-based skills use [Playwright MCP](https://github.com/microsoft/playwright-mcp) for automation. The Threads skills post the content you provide through an automated browser session, so you can approve the draft and let the agent publish it without setting up Meta Graph API credentials.
 
 ---
 
@@ -74,9 +74,9 @@ claude plugin install threads-post@claude-socials --scope project
 
 ## Prerequisites
 
-Some plugins use **Playwright MCP** for browser automation; others (like `threads-post`) call REST APIs directly and have no Playwright dependency.
+Plugins use **Playwright MCP** for browser automation. For Threads, the agent posts the given content through the Threads web UI after you approve the draft.
 
-### Playwright MCP (for browser-based plugins)
+### Playwright MCP
 
 ### 1. Install Playwright browsers
 
@@ -100,6 +100,10 @@ Add to your MCP config globally (`~/.claude/claude_desktop_config.json`) or per-
 ```
 
 See the [Playwright MCP repo](https://github.com/microsoft/playwright-mcp) for full options (headed/headless mode, browser choice, auth persistence).
+
+### 3. Log in to Threads in the Playwright browser
+
+The Threads skills use your browser session instead of API tokens. On first use, the agent will open `https://www.threads.net/`; log in once in that browser profile, then future posts can reuse the session when your Playwright setup preserves browser state.
 
 ---
 
@@ -150,13 +154,13 @@ Share these 5 images as a carousel on Threads
 Post this plot twist as a spoiler
 ```
 
-Claude drafts the post(s), shows them to you for approval, then publishes via the Meta Graph API.
+Claude drafts the post(s), shows them to you for approval, then publishes the approved content automatically through the Threads web UI.
 
 ---
 
-## Credentials
+## Credentials And Sessions
 
-Skills read credentials from environment variables — never hardcoded values.
+Some skills read credentials from environment variables — never hardcoded values. Threads uses the authenticated Playwright browser session instead of password or API-token environment variables.
 
 Create a `.socials` file in your project root (it is gitignored by default):
 
@@ -165,9 +169,8 @@ Create a `.socials` file in your project root (it is gitignored by default):
 HN_USERNAME=your_username
 HN_PASSWORD=your_password
 
-# Meta Threads
-THREADS_USER_ID=123456789
-THREADS_ACCESS_TOKEN=EAAxxxxxxxxxxxxx
+# Meta Threads (optional, for nicer reporting only)
+THREADS_HANDLE=your_handle
 ```
 
 Or export in your shell:
@@ -175,11 +178,10 @@ Or export in your shell:
 ```bash
 export HN_USERNAME=your_username
 export HN_PASSWORD=your_password
-export THREADS_USER_ID=123456789
-export THREADS_ACCESS_TOKEN=EAAxxxxxxxxxxxxx
+export THREADS_HANDLE=your_handle
 ```
 
-Each skill's `SKILL.md` documents which env vars it requires and how to obtain them.
+Each skill's `SKILL.md` documents which credentials, browser session, or optional env vars it uses.
 
 ---
 
@@ -203,18 +205,18 @@ Submits a URL to [Hacker News](https://news.ycombinator.com/submit).
 
 ### [`threads-post`](./plugins/threads-post/)
 
-Publishes content to Meta Threads via the Graph API. Includes four skills:
+Publishes content to Meta Threads through an automated Playwright browser session. Includes four skills:
 
 | Skill | Description | Requires |
 |-------|-------------|----------|
-| `threads-post` | Single text or image post | `threads_basic`, `threads_content_publish` |
-| `threads-post-carousel` | Up to 10 images/videos in one post | `threads_basic`, `threads_content_publish` |
-| `threads-post-thread` | Root post + linear reply chain | `threads_basic`, `threads_content_publish`, `threads_manage_replies` |
-| `threads-post-spoiler` | Tap-to-reveal spoiler post (text, media, or both) | `threads_basic`, `threads_content_publish` |
+| `threads-post` | Single text or image post | Logged-in Threads browser session |
+| `threads-post-carousel` | Multiple images/videos in one post | Logged-in Threads browser session |
+| `threads-post-thread` | Root post + reply chain | Logged-in Threads browser session |
+| `threads-post-spoiler` | Spoiler-style post or fallback spoiler formatting | Logged-in Threads browser session |
 
-**Requires:** `THREADS_USER_ID`, `THREADS_ACCESS_TOKEN`
+**Requires:** Playwright MCP and a logged-in Threads browser session.
 
-**No Playwright required** — calls the Meta Graph API directly with `curl`.
+The agent takes the content you give it, drafts or lightly polishes it, asks for approval, then posts it automatically in Threads using the web UI. No Meta app, Graph API token, numeric user ID, or `curl` flow is required.
 
 ---
 

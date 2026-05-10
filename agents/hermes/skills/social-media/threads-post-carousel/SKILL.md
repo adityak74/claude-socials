@@ -1,128 +1,112 @@
 ---
 name: threads-post-carousel
-description: Publishes a carousel post (2–10 images or videos) to Meta Threads via the Graph API
-version: 1.0.0
-author: Aditya Karnam
-license: MIT
-platforms: [macos, linux, windows]
-
-metadata:
-  hermes:
-    tags: [Social Media, Threads, Meta, Graph API, Carousel, Gallery]
-    related_skills: [threads-post, threads-post-thread, threads-post-spoiler]
-    requires_toolsets: [web]
-    requires_tools: [web_search]
-
-required_environment_variables:
-  - name: THREADS_USER_ID
-    prompt: "Enter your numeric Threads user ID"
-    help: "Get it via: curl 'https://graph.threads.net/v1.0/me?access_token=YOUR_TOKEN'"
-    required_for: "Identifying your Threads account in API calls"
-  - name: THREADS_ACCESS_TOKEN
-    prompt: "Enter your long-lived Threads access token"
-    help: "Generate at developers.facebook.com — needs threads_basic and threads_content_publish scopes"
-    required_for: "Authenticating Graph API requests"
+description: Publishes a carousel post to Meta Threads — a single post containing multiple images or videos. Trigger when the user says "carousel on Threads", "post multiple images to Threads", "Threads carousel", "share a gallery on Threads", or any intent to publish a multi-image or multi-video Threads post. Do NOT trigger for a single image post or reply chain threads — those have dedicated skills.
 ---
 
-# Threads Post — Carousel
+# Threads Post - Carousel
 
-Publishes a carousel post to Meta Threads — a single post containing 2–10 images, videos, or a mix of both. Counts as one post against the 250-post-per-24h limit.
+Publishes a multi-media Threads post through the web UI using Playwright MCP. This avoids Meta Graph API setup, app review, scoped access tokens, numeric user IDs, and container-publish flows.
 
-## When to Use
+## Prerequisites
 
-Trigger when the user says "carousel on Threads", "post multiple images to Threads", "Threads carousel", "share a gallery on Threads", or any multi-image/video Threads intent. Use `threads-post` for single images and `threads-post-thread` for reply chains.
+- Playwright MCP is configured and available to the agent.
+- The browser profile used by Playwright is logged in to Threads at `https://www.threads.net/`.
+- Media files exist as local file paths the browser can access.
 
-## Quick Reference
+If the browser is not logged in, open Threads with Playwright and ask the user to complete login in the browser. Do not ask for a Meta access token.
 
-- Three-step flow: item containers → carousel container → publish
-- 2–10 media items per carousel
-- All media must be at publicly accessible URLs (Meta fetches server-side)
-- Credentials file: `.socials`
+## Optional Setup
 
-## Procedure
+Skills may use these environment variables when present:
 
-### 1. Read credentials
+- `THREADS_HANDLE` - the user's public Threads handle, used only for nicer reporting.
+- `THREADS_PROFILE_DIR` - a persistent browser profile directory if the local Playwright MCP setup supports it.
 
-```bash
-echo $THREADS_USER_ID
-echo $THREADS_ACCESS_TOKEN
+Credentials are browser-session based. Do not create or request `THREADS_USER_ID` or `THREADS_ACCESS_TOKEN`.
+
+## Inputs
+
+- **Caption text** - optional but recommended.
+- **Image/video file paths** - multiple local files to attach.
+
+Ask the user for local media paths before proceeding. Browser automation cannot upload remote URLs directly unless the files are first downloaded to a local path.
+
+## Crafting the Caption
+
+When the user provides an article or raw content to accompany the carousel:
+
+- Keep the caption within the visible Threads composer limit; target about 500 characters unless the UI allows more.
+- Put the hook in the first line.
+- Let the images carry the visual story.
+- Use 1-3 hashtags max at the end.
+- Match the user's tone if examples are provided.
+
+Show the caption draft and media list to the user and wait for approval before publishing.
+
+## Workflow
+
+### Step 1: Open Threads
+
+Use Playwright MCP to navigate to:
+
+```text
+https://www.threads.net/
 ```
 
-If blank, check `.socials`:
-```bash
-grep -E "^THREADS_(USER_ID|ACCESS_TOKEN)=" .socials 2>/dev/null
-```
+If the login screen appears, stop and ask the user to log in through the browser. After login, continue with the same browser session.
 
-If still missing, ask the user or run `hermes setup threads-post-carousel`.
+### Step 2: Start a new post
 
-### 2. Gather inputs
+Use Playwright's accessibility snapshot or locator tools to find the composer entry point. Common labels include:
 
-Ask the user for:
-- **Caption** — text for the carousel post (optional but recommended)
-- **Media URLs** — 2 to 10 publicly accessible image or video URLs
+- `New thread`
+- `Start a thread`
+- `Post`
+- `Create`
 
-Confirm the list before proceeding. **Show the caption draft to the user for approval.**
+Open the composer and paste the approved caption.
 
-### 3. Create item containers
+### Step 3: Attach media
 
-For each image:
-```bash
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads" \
-  -d "media_type=IMAGE" \
-  -d "image_url=https://example.com/1.jpg" \
-  -d "is_carousel_item=true" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+Use the attachment/upload control to set the approved local file paths. After attaching:
 
-For each video:
-```bash
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads" \
-  -d "media_type=VIDEO" \
-  -d "video_url=https://example.com/clip.mp4" \
-  -d "is_carousel_item=true" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+- Wait for every preview to render.
+- Confirm the number and order of media items are correct.
+- Watch for unsupported-format or upload-failed messages.
 
-Collect all `id` values: `ITEM_ID_1`, `ITEM_ID_2`, …
+### Step 4: Publish
 
-### 4. Create carousel container
+Click the final publish button, commonly labeled `Post`, `Publish`, or `Thread`.
 
-```bash
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads" \
-  -d "media_type=CAROUSEL" \
-  -d "children=ITEM_ID_1,ITEM_ID_2,ITEM_ID_3" \
-  --data-urlencode "text=YOUR_CAPTION" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+Wait until the composer closes and the new post appears, or until Threads shows a confirmation/error state.
 
-Parse `id` → `CAROUSEL_CONTAINER_ID`.
+### Step 5: Confirm and report
 
-### 5. Wait and publish
+Tell the user:
 
-```bash
-sleep 30
+- Success or failure.
+- The caption that was published.
+- Number of media items attached.
+- The live post URL if Playwright can read it from the page or browser address.
+- Any visible Threads error message on failure.
 
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads_publish" \
-  -d "creation_id=CAROUSEL_CONTAINER_ID" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+Never expose browser cookies, session storage, or other authentication data.
 
-### 6. Report
+## Error Handling
 
-Tell the user: success/failure, live post URL, number of media items published. Never expose the access token.
+| Error | Cause | Action |
+|-------|-------|--------|
+| Login required | Browser session is not authenticated | Ask the user to log in through the Playwright browser |
+| Upload control not found | Threads UI changed or composer did not load | Refresh once, inspect the accessibility snapshot, then report the blocker |
+| Upload fails | File path invalid, unsupported media, too many files, or upload issue | Ask for valid local file paths or reduce the media set |
+| Publish button disabled | Upload still processing or validation issue | Wait for previews and check visible validation text |
+| Rate/limit message | Threads account limit or platform restriction | Report the exact visible message and stop |
+| Captcha/checkpoint | Threads security challenge | Ask the user to complete it manually in the browser |
 
-## Pitfalls
+## Important Notes
 
-- Minimum 2 items, maximum 10 items per carousel.
-- All media must be publicly reachable — private or authenticated URLs will fail silently.
-- The 30-second wait is required before publishing.
-- Base URL is `graph.threads.net`, not `graph.facebook.com`.
-- Long-lived tokens expire after 60 days.
-
-## Verification
-
-On success, `threads_publish` returns a JSON object with `id`. Confirm the live URL renders the carousel correctly.
+- This skill uses the Threads web UI, not `graph.threads.net`.
+- Do not use curl, API containers, Meta app credentials, or long-lived tokens.
+- Threads UI limits may differ by account and platform rollout. Follow the visible UI limit and report any validation text.
+- Prefer visible UI labels and Playwright accessibility locators over brittle CSS selectors.
+- Keep the browser profile persistent when possible so the user does not need to log in every run.
