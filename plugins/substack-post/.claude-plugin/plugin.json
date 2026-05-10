@@ -1,0 +1,5 @@
+{
+  "name": "substack-post",
+  "description": "Publish a local blog file to Substack via Playwright MCP browser automation",
+  "version": "1.0.0"
+}
