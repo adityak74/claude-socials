@@ -84,9 +84,10 @@ fi
 # ---------------------------------------------------------------------------
 plugin_skills() {
   case "$1" in
-    hn-submit)    echo "hn-submit" ;;
-    threads-post) echo "threads-post threads-post-carousel threads-post-thread threads-post-spoiler" ;;
-    "")           echo "hn-submit threads-post threads-post-carousel threads-post-thread threads-post-spoiler" ;;
+    hn-submit)     echo "hn-submit" ;;
+    threads-post)  echo "threads-post threads-post-carousel threads-post-thread threads-post-spoiler" ;;
+    substack-post) echo "substack-post" ;;
+    "")            echo "hn-submit threads-post threads-post-carousel threads-post-thread threads-post-spoiler substack-post" ;;
     *)            echo "$1" ;;
   esac
 }
@@ -129,8 +130,9 @@ install_claude() {
     echo "  claude plugin install threads-post@claude-socials"
     echo ""
     echo "Available plugins:"
-    echo "  hn-submit     — Submit to Hacker News"
-    echo "  threads-post  — Post to Meta Threads (4 skills)"
+    echo "  hn-submit      — Submit to Hacker News"
+    echo "  threads-post   — Post to Meta Threads (4 skills)"
+    echo "  substack-post  — Publish a local blog file to Substack"
   fi
 }
 
