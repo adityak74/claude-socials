@@ -41,6 +41,22 @@
       "keywords": ["threads", "meta", "social-media", "graph-api", "posting"],
       "category": "social-media",
       "tags": ["threads", "meta", "posting", "api", "thread-chain"]
+    },
+    {
+      "name": "substack-post",
+      "source": "./plugins/substack-post",
+      "description": "Publish a local markdown blog file to Substack via Playwright MCP browser automation",
+      "version": "1.0.0",
+      "author": {
+        "name": "Sardhendu Mishra",
+        "email": "harnexa.dev@gmail.com"
+      },
+      "homepage": "https://github.com/adityak74/claude-socials/tree/main/plugins/substack-post",
+      "repository": "https://github.com/adityak74/claude-socials",
+      "license": "MIT",
+      "keywords": ["substack", "blog", "newsletter", "social-media", "publishing", "playwright"],
+      "category": "social-media",
+      "tags": ["substack", "blog", "publishing", "automation"]
     }
   ]
 }

@@ -16,6 +16,7 @@ Browser-based skills use [Playwright MCP](https://github.com/microsoft/playwrigh
 |---|---|---|
 | [`hn-submit`](./plugins/hn-submit/) | Hacker News | ✅ Available |
 | [`threads-post`](./plugins/threads-post/) | Meta Threads | ✅ Available |
+| [`substack-post`](./plugins/substack-post/) | Substack | ✅ Available |
 
 More platforms coming soon (Reddit, LinkedIn, Twitter/X, Lobsters, ...).
 
@@ -38,6 +39,7 @@ More platforms coming soon (Reddit, LinkedIn, Twitter/X, Lobsters, ...).
 ```bash
 curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- hn-submit
 curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- threads-post
+curl -fsSL https://raw.githubusercontent.com/adityak74/claude-socials/main/scripts/install.sh | sh -s -- substack-post
 ```
 
 The installer detects whichever of `claude`, `codex`, and `hermes` are on your `$PATH` and installs into each. Override with `--agent <claude|codex|hermes|all>`:
@@ -59,6 +61,7 @@ Inside Claude Code:
 /plugin marketplace add adityak74/claude-socials
 /plugin install hn-submit@claude-socials
 /plugin install threads-post@claude-socials
+/plugin install substack-post@claude-socials
 ```
 
 Or from the terminal:
@@ -156,6 +159,26 @@ Post this plot twist as a spoiler
 
 Claude drafts the post(s), shows them to you for approval, then publishes the approved content automatically through the Threads web UI.
 
+### Substack
+
+```
+/substack-post
+```
+
+Or just describe what you want, with a path to a local markdown file:
+
+```
+Publish ./posts/my-article.md to Substack
+Post this blog to Substack: ~/writing/draft.md
+Save ./posts/launch-announcement.md as a Substack draft
+```
+
+The skill logs in via Playwright (using your Substack email + password), opens the editor, fills in the title and subtitle, and pastes the markdown body. **It stops at "Save draft" by default** and asks before publishing — say "and publish" in your request to go all the way.
+
+**Frontmatter is handled natively.** The skill detects YAML (`---` ... `---`) or TOML (`+++` ... `+++`) frontmatter blocks at the top of the file, pulls `title` and `subtitle`/`description`/`summary`/`excerpt` from them, and strips the block before paste. Works out of the box with Hugo, Jekyll, Zola, Hexo, Astro, and Obsidian-style files — your source markdown stays untouched.
+
+> **Markdown fidelity is partial.** Substack's editor auto-converts headings, bold/italic, links, and lists when markdown is pasted. Code blocks, images, and tables paste as plain text — the skill flags this in its final report. **Password sign-in only**: if your Substack account uses magic-link only, set a password at [substack.com/account/login-options](https://substack.com/account/login-options) first.
+
 ---
 
 ## Credentials And Sessions
@@ -171,6 +194,11 @@ HN_PASSWORD=your_password
 
 # Meta Threads (optional, for nicer reporting only)
 THREADS_HANDLE=your_handle
+
+# Substack
+SUBSTACK_EMAIL=you@example.com
+SUBSTACK_PASSWORD=your_substack_password
+SUBSTACK_PUBLICATION=myblog          # optional — your <publication>.substack.com subdomain
 ```
 
 Or export in your shell:
@@ -179,6 +207,9 @@ Or export in your shell:
 export HN_USERNAME=your_username
 export HN_PASSWORD=your_password
 export THREADS_HANDLE=your_handle
+export SUBSTACK_EMAIL=you@example.com
+export SUBSTACK_PASSWORD=your_substack_password
+export SUBSTACK_PUBLICATION=myblog
 ```
 
 Each skill's `SKILL.md` documents which credentials, browser session, or optional env vars it uses.
@@ -217,6 +248,27 @@ Publishes content to Meta Threads through an automated Playwright browser sessio
 **Requires:** Playwright MCP and a logged-in Threads browser session.
 
 The agent takes the content you give it, drafts or lightly polishes it, asks for approval, then posts it automatically in Threads using the web UI. No Meta app, Graph API token, numeric user ID, or `curl` flow is required.
+
+---
+
+### [`substack-post`](./plugins/substack-post/)
+
+Publishes a local markdown blog file to [Substack](https://substack.com) via Playwright browser automation.
+
+**Requires:** `SUBSTACK_EMAIL`, `SUBSTACK_PASSWORD`, optional `SUBSTACK_PUBLICATION`
+
+**Trigger:** `/substack-post` or phrases like "publish to Substack", "post this blog to Substack", "save this draft to Substack"
+
+**What it does:**
+1. Reads the local markdown file and auto-detects the title from the first `# H1` (or filename)
+2. Logs in to Substack via Playwright (clicks "Sign in with password" — magic-link is the default)
+3. Opens the editor (uses `SUBSTACK_PUBLICATION` if set, otherwise the dashboard's "New post" button)
+4. Fills in title and pastes the markdown body
+5. Saves as draft, reports the draft URL, and asks before publishing
+
+**Caveats:**
+- Substack's editor only auto-converts headings, bold/italic, links, and lists from pasted markdown. Code blocks, images, and tables paste as plain text.
+- Requires a Substack password — magic-link-only accounts won't work until you set one at [substack.com/account/login-options](https://substack.com/account/login-options).
 
 ---
 
