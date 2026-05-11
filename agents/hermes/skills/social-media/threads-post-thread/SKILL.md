@@ -1,137 +1,115 @@
 ---
 name: threads-post-thread
-description: Crafts and publishes a threaded reply chain to Meta Threads — a root post followed by connected replies forming a linear thread
-version: 1.0.0
-author: Aditya Karnam
-license: MIT
-platforms: [macos, linux, windows]
-
-metadata:
-  hermes:
-    tags: [Social Media, Threads, Meta, Graph API, Thread Chain, Reply]
-    related_skills: [threads-post, threads-post-carousel, threads-post-spoiler]
-    requires_toolsets: [web]
-    requires_tools: [web_search]
-
-required_environment_variables:
-  - name: THREADS_USER_ID
-    prompt: "Enter your numeric Threads user ID"
-    help: "Get it via: curl 'https://graph.threads.net/v1.0/me?access_token=YOUR_TOKEN'"
-    required_for: "Identifying your Threads account in API calls"
-  - name: THREADS_ACCESS_TOKEN
-    prompt: "Enter your long-lived Threads access token"
-    help: "Generate at developers.facebook.com — needs threads_basic, threads_content_publish, and threads_manage_replies scopes"
-    required_for: "Authenticating Graph API requests including reply publishing"
+description: Crafts and publishes a threaded reply chain to Meta Threads — a root post followed by a series of connected replies that form a thread. Trigger when the user says "create a thread on Threads", "thread this article", "post a thread", "make a multi-part thread", "thread chain", or any intent to publish a sequence of connected posts on Threads. Do NOT trigger for a single post or multi-image carousel — those have dedicated skills.
 ---
 
-# Threads Post — Thread Chain
+# Threads Post - Thread Chain
 
-Publishes a root post followed by a chain of connected replies on Meta Threads. Each reply targets the previous post's live ID, creating a linear 1→2→3 thread.
+Publishes a root post followed by connected replies on Meta Threads through the web UI using Playwright MCP. This avoids Meta Graph API setup, app review, scoped access tokens, numeric user IDs, and container-publish flows.
 
-**Rate limits:**
-- 250 root posts per rolling 24-hour window
-- 1,000 API-published replies per rolling 24-hour window
+## Prerequisites
 
-## When to Use
+- Playwright MCP is configured and available to the agent.
+- The browser profile used by Playwright is logged in to Threads at `https://www.threads.net/`.
 
-Trigger when the user says "create a thread on Threads", "thread this article", "post a thread", "make a multi-part thread", or "thread chain". Use `threads-post` for a single post and `threads-post-carousel` for galleries.
+If the browser is not logged in, open Threads with Playwright and ask the user to complete login in the browser. Do not ask for a Meta access token.
 
-## Quick Reference
+## Optional Setup
 
-- Root container: `/{THREADS_USER_ID}/threads`
-- Reply container: `/me/threads` with `reply_to_id`
-- Publish: `/{THREADS_USER_ID}/threads_publish` (same for root and replies)
-- Each post needs a 30-second wait before publish
-- Credentials file: `.socials`
+Skills may use these environment variables when present:
 
-## Procedure
+- `THREADS_HANDLE` - the user's public Threads handle, used only for nicer reporting.
+- `THREADS_PROFILE_DIR` - a persistent browser profile directory if the local Playwright MCP setup supports it.
 
-### 1. Read credentials
+Credentials are browser-session based. Do not create or request `THREADS_USER_ID` or `THREADS_ACCESS_TOKEN`.
 
-```bash
-echo $THREADS_USER_ID
-echo $THREADS_ACCESS_TOKEN
+## Inputs
+
+- **Article or long-form content** - break it into a thread.
+- **Ready-made posts** - publish each post in order.
+
+Ask if it is unclear how many posts should be in the chain. Default to 3-8 posts.
+
+## Crafting the Thread
+
+When given an article or raw content:
+
+- Break it into 3-8 logical chunks.
+- Keep each post within the visible Threads composer limit; target about 500 characters unless the UI allows more.
+- Post 1 is the hook.
+- Middle posts carry one clear point each.
+- The last post closes with a takeaway, CTA, or question.
+- Number them as `1/N`, `2/N`, etc. unless the user asks for an unnumbered style.
+- Put hashtags only on the last post, 1-3 max.
+- Match the user's tone if examples are provided.
+
+Show the full thread draft to the user and wait for approval before publishing.
+
+## Workflow
+
+### Step 1: Open Threads
+
+Use Playwright MCP to navigate to:
+
+```text
+https://www.threads.net/
 ```
 
-If blank, check `.socials`:
-```bash
-grep -E "^THREADS_(USER_ID|ACCESS_TOKEN)=" .socials 2>/dev/null
-```
+If the login screen appears, stop and ask the user to log in through the browser. After login, continue with the same browser session.
 
-### 2. Craft the thread
+### Step 2: Create the root post
 
-When given article or long-form content:
-- Break into 3–8 chunks, each under 500 characters
-- Post 1: hook — strong opening
-- Posts 2…N-1: one clear point each, flowing naturally
-- Last post: CTA or closing takeaway
-- Number them `1/N`, `2/N`, …
-- Hashtags only at the end of the last post (1–3 max)
+Use Playwright's accessibility snapshot or locator tools to find the composer entry point. Common labels include:
 
-**Show the full draft to the user and wait for approval before publishing.**
+- `New thread`
+- `Start a thread`
+- `Post`
+- `Create`
 
-### 3. Publish root post
+Open the composer, paste the approved root post, verify the visible text, and publish it.
 
-**3a. Create container:**
-```bash
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads" \
-  -d "media_type=TEXT" \
-  --data-urlencode "text=ROOT_POST_TEXT" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+### Step 3: Open the published root post
 
-Parse `id` → `ROOT_CONTAINER_ID`.
+After publishing, open the new root post from the feed, profile, or visible success state. Capture its URL if available.
 
-**3b. Wait and publish:**
-```bash
-sleep 30
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads_publish" \
-  -d "creation_id=ROOT_CONTAINER_ID" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+If the root post cannot be found reliably, stop and report the blocker instead of guessing where replies will attach.
 
-Parse `id` → `REPLY_TO_ID` (the root post's live ID).
+### Step 4: Reply in order
 
-### 4. Publish each reply (repeat for posts 2…N)
+For each remaining post:
 
-**4a. Create reply container:**
-```bash
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/me/threads" \
-  -d "media_type=TEXT" \
-  --data-urlencode "text=NEXT_POST_TEXT" \
-  -d "reply_to_id=${REPLY_TO_ID}" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+- Open the reply composer for the current post.
+- Paste the next approved post.
+- Verify the visible text.
+- Publish the reply.
+- Wait until the reply is visible.
+- Continue from the newly published reply when the UI supports a linear chain. If the UI only exposes replying to the root, state that limitation before continuing.
 
-Parse `id` → `REPLY_CONTAINER_ID`.
+### Step 5: Confirm and report
 
-**4b. Wait and publish:**
-```bash
-sleep 30
-curl -s -X POST \
-  "https://graph.threads.net/v1.0/${THREADS_USER_ID}/threads_publish" \
-  -d "creation_id=REPLY_CONTAINER_ID" \
-  -d "access_token=${THREADS_ACCESS_TOKEN}"
-```
+Tell the user:
 
-Parse `id` → update `REPLY_TO_ID` before the next iteration.
+- Success or failure for each post.
+- The root post URL if Playwright can read it.
+- Total posts published.
+- Any visible Threads error message on failure.
 
-### 5. Report
+Never expose browser cookies, session storage, or other authentication data.
 
-Tell the user: success/failure per post, root post URL (`https://www.threads.net/@{handle}/post/{ROOT_POST_ID}`), total posts published. Never expose the access token.
+## Error Handling
 
-## Pitfalls
+| Error | Cause | Action |
+|-------|-------|--------|
+| Login required | Browser session is not authenticated | Ask the user to log in through the Playwright browser |
+| Composer/reply button not found | Threads UI changed or page did not load | Refresh once, inspect the accessibility snapshot, then report the blocker |
+| Root post not found | Feed did not show the new post or navigation failed | Stop and ask the user whether to continue manually |
+| Publish button disabled | Empty text or visible validation issue | Check the composer text and report the validation message |
+| Rate/limit message | Threads account limit or platform restriction | Report the exact visible message and stop |
+| Captcha/checkpoint | Threads security challenge | Ask the user to complete it manually in the browser |
 
-- Root containers use `/{THREADS_USER_ID}/threads`; reply containers use `/me/threads`. Mixing them breaks the chain.
-- Publishing always uses `/{THREADS_USER_ID}/threads_publish` regardless.
-- Each post needs its own 30-second wait — skipping causes `400 / not ready`.
-- The chain is strictly linear (1→2→3), not a fan (1←2, 1←3).
-- `threads_manage_replies` scope is required for replies — missing it causes 403.
-- Long-lived tokens expire after 60 days.
+## Important Notes
 
-## Verification
-
-After each publish, confirm the returned `id` is non-empty. After the chain completes, the root post URL should show the thread with all replies visible.
+- This skill uses the Threads web UI, not `graph.threads.net`.
+- Do not use curl, API containers, Meta app credentials, or long-lived tokens.
+- Prefer visible UI labels and Playwright accessibility locators over brittle CSS selectors.
+- Keep the browser profile persistent when possible so the user does not need to log in every run.
